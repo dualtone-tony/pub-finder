@@ -14,6 +14,8 @@ export type Venue = LatLng & {
   rating?: number;
   ratingCount?: number;
   openNow?: boolean;
+  /** Google's "good for watching sports" attribute; undefined when Google doesn't know. */
+  showsSport?: boolean;
   mapsUri?: string;
   kind?: string;
 };

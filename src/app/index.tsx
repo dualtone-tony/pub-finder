@@ -73,6 +73,7 @@ export default function Home() {
   const [area, setArea] = useState<AreaSize>('normal');
   const [sort, setSort] = useState<SortMode>('fairest');
   const [openOnly, setOpenOnly] = useState(false);
+  const [sportOnly, setSportOnly] = useState(false);
   const [results, setResults] = useState<VenueResult[] | null>(null);
   const [searchedOrigins, setSearchedOrigins] = useState<Origin[]>([]);
   const [searchedArea, setSearchedArea] = useState<ReturnType<typeof searchArea> | null>(null);
@@ -138,8 +139,11 @@ export default function Home() {
 
   const shown = useMemo(() => {
     if (!results) return [];
-    return sortResults(openOnly ? results.filter((r) => r.openNow !== false) : results, sort);
-  }, [results, sort, openOnly]);
+    const filtered = results.filter(
+      (r) => (!openOnly || r.openNow !== false) && (!sportOnly || r.showsSport === true),
+    );
+    return sortResults(filtered, sort);
+  }, [results, sort, openOnly, sportOnly]);
 
   // Share what's on screen with the map view, in the same order as the list.
   useEffect(() => {
@@ -271,18 +275,32 @@ export default function Home() {
                 <Text style={styles.section}>
                   {shown.length} result{shown.length === 1 ? '' : 's'}
                 </Text>
-                <View style={styles.resultsActions}>
-                  <Pressable onPress={() => setOpenOnly((v) => !v)} accessibilityRole="switch" accessibilityState={{ checked: openOnly }}>
-                    <Text style={[styles.toggle, openOnly && { color: colors.accent }]}>
-                      {openOnly ? '☑' : '☐'} Open now
-                    </Text>
+                <Link href="/map" asChild>
+                  <Pressable style={styles.mapBtn} accessibilityRole="button" accessibilityLabel="Show results on a map">
+                    <Text style={styles.mapBtnText}>🗺 Map</Text>
                   </Pressable>
-                  <Link href="/map" asChild>
-                    <Pressable style={styles.mapBtn} accessibilityRole="button" accessibilityLabel="Show results on a map">
-                      <Text style={styles.mapBtnText}>🗺 Map</Text>
-                    </Pressable>
-                  </Link>
-                </View>
+                </Link>
+              </View>
+              <View style={styles.filters}>
+                <Pressable
+                  onPress={() => setOpenOnly((v) => !v)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: openOnly }}
+                >
+                  <Text style={[styles.toggle, openOnly && { color: colors.accent }]}>
+                    {openOnly ? '☑' : '☐'} Open now
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setSportOnly((v) => !v)}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: sportOnly }}
+                  accessibilityHint="Only places Google lists as good for watching sports"
+                >
+                  <Text style={[styles.toggle, sportOnly && { color: colors.accent }]}>
+                    {sportOnly ? '☑' : '☐'} 📺 Shows sport
+                  </Text>
+                </Pressable>
               </View>
               <Chips
                 options={[
@@ -300,7 +318,11 @@ export default function Home() {
                   : 'Tap a venue to open it in Google Maps, or a drive time for directions.'}
               </Text>
               {shown.length === 0 && (
-                <Text style={styles.hint}>Nothing found here — try a wider search area.</Text>
+                <Text style={styles.hint}>
+                  {sportOnly
+                    ? 'None of these are listed by Google as showing sport — try a wider area or turn the filter off.'
+                    : 'Nothing found here — try a wider search area.'}
+                </Text>
               )}
               {shown.map((v, i) => (
                 <ResultCard key={v.id} venue={v} origins={searchedOrigins} rank={i + 1} />
@@ -380,8 +402,8 @@ const styles = StyleSheet.create({
   error: { color: colors.bad, marginTop: 12, fontSize: 14 },
   resultsHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   toggle: { fontSize: 14, fontWeight: '600', color: colors.muted },
-  resultsActions: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 6 },
-  mapBtn: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 },
+  filters: { flexDirection: 'row', gap: 18, marginBottom: 10 },
+  mapBtn: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 6 },
   mapBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modal: { backgroundColor: colors.bg, padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40 },

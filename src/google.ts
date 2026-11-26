@@ -45,6 +45,7 @@ type ApiPlace = {
   rating?: number;
   userRatingCount?: number;
   currentOpeningHours?: { openNow?: boolean };
+  goodForWatchingSports?: boolean;
   googleMapsUri?: string;
   primaryTypeDisplayName?: { text: string };
 };
@@ -164,6 +165,7 @@ export async function searchVenues(
       'places.rating',
       'places.userRatingCount',
       'places.currentOpeningHours.openNow',
+      'places.goodForWatchingSports',
       'places.googleMapsUri',
       'places.primaryTypeDisplayName',
     ].join(','),
@@ -185,6 +187,7 @@ export async function searchVenues(
       rating: p.rating,
       ratingCount: p.userRatingCount,
       openNow: p.currentOpeningHours?.openNow,
+      showsSport: p.goodForWatchingSports,
       mapsUri: p.googleMapsUri,
       kind: p.primaryTypeDisplayName?.text,
     }));

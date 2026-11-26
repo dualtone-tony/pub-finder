@@ -36,11 +36,14 @@ export function ResultCard({ venue, origins, rank }: { venue: VenueResult; origi
               </Text>
             )}
           </View>
-          {venue.openNow != null && (
-            <Text style={[styles.open, { color: venue.openNow ? colors.good : colors.bad }]}>
-              {venue.openNow ? 'Open' : 'Closed'}
-            </Text>
-          )}
+          <View style={styles.tags}>
+            {venue.openNow != null && (
+              <Text style={[styles.open, { color: venue.openNow ? colors.good : colors.bad }]}>
+                {venue.openNow ? 'Open' : 'Closed'}
+              </Text>
+            )}
+            {venue.showsSport && <Text style={styles.sport}>📺 Sport</Text>}
+          </View>
         </View>
       </Pressable>
 
@@ -101,7 +104,9 @@ const styles = StyleSheet.create({
   name: { fontSize: 17, fontWeight: '700', color: colors.text },
   meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
   address: { fontSize: 13, color: colors.muted, marginTop: 1 },
+  tags: { alignItems: 'flex-end', gap: 4 },
   open: { fontSize: 12, fontWeight: '700' },
+  sport: { fontSize: 12, fontWeight: '700', color: colors.accent },
   drives: { marginTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingTop: 6 },
   drive: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderRadius: 8 },
   badge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

@@ -1,6 +1,7 @@
+import Constants from 'expo-constants';
 import { useImage } from 'expo-image';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { bounds, boundsCenter, fitZoom } from '../mapGeometry';
 import { originMarkers, venueMarkers } from '../markerAssets';
@@ -22,9 +23,22 @@ function useImages(sources: number[]) {
 // Apple Maps in expo-maps needs iOS 17+ (and pin taps need iOS 18+).
 const IOS_MAJOR = Platform.OS === 'ios' ? parseInt(String(Platform.Version), 10) : 0;
 
+// Set by app.config.ts at build time. The Android Maps SDK only reads its key from the build.
+const ANDROID_KEY_IN_BUILD = Constants.expoConfig?.extra?.androidMapsKeyConfigured !== false;
+const LOAD_TIMEOUT_MS = 10000;
+
 export function ResultsMap({ search, selectedId, onSelect, bottomInset = 0 }: ResultsMapProps) {
   const appleRef = useRef<AppleMaps.MapView>(null);
   const googleRef = useRef<GoogleMaps.MapView>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [slowToLoad, setSlowToLoad] = useState(false);
+
+  // Google Maps never fires onMapLoaded when the key is rejected; the map just stays blank.
+  useEffect(() => {
+    if (Platform.OS !== 'android' || mapLoaded) return;
+    const t = setTimeout(() => setSlowToLoad(true), LOAD_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [mapLoaded]);
   const { width, height } = useWindowDimensions();
   const originIcons = useImages(originMarkers);
   const venueIcons = useImages(venueMarkers);
@@ -53,17 +67,31 @@ export function ResultsMap({ search, selectedId, onSelect, bottomInset = 0 }: Re
     lineWidth: 2,
   };
 
+  const openArea = () =>
+    Linking.openURL(
+      `https://www.google.com/maps/search/pubs+and+bars/@${search.center.latitude},${search.center.longitude},12z`,
+    );
+
   if (Platform.OS === 'ios' && IOS_MAJOR < 17) {
     return (
       <View style={[StyleSheet.absoluteFill, styles.unsupported]}>
         <Text style={styles.unsupportedText}>The map needs iOS 17 or later.</Text>
-        <Pressable
-          onPress={() =>
-            Linking.openURL(
-              `https://www.google.com/maps/search/pubs+and+bars/@${search.center.latitude},${search.center.longitude},12z`,
-            )
-          }
-        >
+        <Pressable onPress={openArea}>
+          <Text style={styles.unsupportedLink}>Open the area in Google Maps ↗</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (Platform.OS === 'android' && !ANDROID_KEY_IN_BUILD) {
+    return (
+      <View style={[StyleSheet.absoluteFill, styles.unsupported]}>
+        <Text style={styles.unsupportedTitle}>No Google Maps key in this build</Text>
+        <Text style={styles.unsupportedText}>
+          The Android map reads its key when the app is built. Set EXPO_PUBLIC_GOOGLE_MAPS_API_KEY as an EAS
+          environment variable for this build profile, then rebuild.
+        </Text>
+        <Pressable onPress={openArea}>
           <Text style={styles.unsupportedLink}>Open the area in Google Maps ↗</Text>
         </Pressable>
       </View>
@@ -124,22 +152,56 @@ export function ResultsMap({ search, selectedId, onSelect, bottomInset = 0 }: Re
     })),
   ];
   return (
-    <GoogleMaps.View
-      ref={googleRef}
-      style={StyleSheet.absoluteFill}
-      cameraPosition={camera}
-      circles={[circle]}
-      markers={markers}
-      onMarkerClick={(m) => onSelect(m.id ?? null)}
-      onMapClick={() => onSelect(null)}
-      contentPadding={{ bottom: bottomInset }}
-      uiSettings={{ mapToolbarEnabled: false, zoomControlsEnabled: false, compassEnabled: true }}
-    />
+    <>
+      <GoogleMaps.View
+        ref={googleRef}
+        style={StyleSheet.absoluteFill}
+        cameraPosition={camera}
+        circles={[circle]}
+        markers={markers}
+        onMarkerClick={(m) => onSelect(m.id ?? null)}
+        onMapClick={() => onSelect(null)}
+        contentPadding={{ bottom: bottomInset }}
+        uiSettings={{ mapToolbarEnabled: false, zoomControlsEnabled: false, compassEnabled: true }}
+        onMapLoaded={() => {
+          setMapLoaded(true);
+          setSlowToLoad(false);
+        }}
+      />
+      {slowToLoad && !mapLoaded && (
+        <View style={styles.warning}>
+          <Text style={styles.warningTitle}>Map not loading?</Text>
+          <Text style={styles.warningText}>
+            Google rejected the map key or there&apos;s no connection. In Google Cloud Console, enable “Maps SDK for
+            Android” for this key, and if the key has API restrictions, add it there too.
+          </Text>
+          <Pressable onPress={openArea} hitSlop={8}>
+            <Text style={styles.unsupportedLink}>Open the area in Google Maps ↗</Text>
+          </Pressable>
+        </View>
+      )}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   unsupported: { alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.bg },
-  unsupportedText: { fontSize: 16, color: colors.text },
+  unsupportedTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  unsupportedText: { fontSize: 15, color: colors.text, textAlign: 'center' },
+  warning: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    right: 12,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 14,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 6,
+  },
+  warningTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  warningText: { fontSize: 14, color: colors.muted },
   unsupportedLink: { fontSize: 16, fontWeight: '700', color: colors.accent },
 });

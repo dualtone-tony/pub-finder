@@ -16,5 +16,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ...(key ? { googleMaps: { apiKey: key } } : {}),
       },
     },
+    extra: {
+      ...config.extra,
+      // Lets the app explain a blank map when the build had no key.
+      androidMapsKeyConfigured: !!key,
+    },
   };
 };

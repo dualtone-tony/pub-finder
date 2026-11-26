@@ -71,7 +71,7 @@ export default function Home() {
   const [origins, setOrigins] = useState<Origin[]>([]);
   const [filter, setFilter] = useState<VenueFilter>('both');
   const [area, setArea] = useState<AreaSize>('normal');
-  const [sort, setSort] = useState<SortMode>('fairest');
+  const [sort, setSort] = useState<SortMode>('centre');
   const [openOnly, setOpenOnly] = useState(false);
   const [sportOnly, setSportOnly] = useState(false);
   const [results, setResults] = useState<VenueResult[] | null>(null);

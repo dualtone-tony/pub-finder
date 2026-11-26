@@ -47,8 +47,24 @@ npm install
 npx expo start
 ```
 
-Scan the QR code with **Expo Go** on your phone. To build an installable app:
-`npx eas-cli@latest build --platform android` (or `ios`).
+Scan the QR code with **Expo Go** on your phone.
+
+## Building an APK
+
+Uses EAS Build (free Expo account, builds in the cloud — no Android Studio needed):
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest init            # links the project to your Expo account (first time only)
+npx eas-cli@latest env:create --environment preview --name EXPO_PUBLIC_GOOGLE_MAPS_API_KEY \
+    --value "AIza..." --visibility sensitive
+npx eas-cli@latest build --platform android --profile preview
+```
+
+When it finishes you get a link / QR code to download the `.apk` and install it
+on your phone (allow "install unknown apps" when prompted). `.env` is
+gitignored and is not uploaded to EAS, which is why the key goes in an EAS
+environment variable instead.
 
 ## Code layout
 

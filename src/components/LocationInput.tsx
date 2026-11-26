@@ -30,11 +30,11 @@ export function LocationInput({ apiKey, near, onAdd, onError }: Props) {
   const isLink = isGoogleMapsUrl(trimmed);
   const coords = parseLatLng(trimmed);
 
+  const canSuggest = !!apiKey && trimmed.length >= 3 && !isLink && !coords;
+  const visibleSuggestions = canSuggest ? suggestions : [];
+
   useEffect(() => {
-    if (!apiKey || trimmed.length < 3 || isLink || coords) {
-      setSuggestions([]);
-      return;
-    }
+    if (!canSuggest) return;
     const id = ++seq.current;
     const t = setTimeout(() => {
       autocomplete(apiKey, trimmed, near)
@@ -43,7 +43,7 @@ export function LocationInput({ apiKey, near, onAdd, onError }: Props) {
     }, 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trimmed, apiKey]);
+  }, [trimmed, apiKey, canSuggest]);
 
   const run = async (fn: () => Promise<Omit<Origin, 'id'>>) => {
     setBusy(true);
@@ -63,7 +63,7 @@ export function LocationInput({ apiKey, near, onAdd, onError }: Props) {
     if (!trimmed) return;
     if (coords) return run(async () => ({ label: 'Dropped pin', address: trimmed, ...coords }));
     if (isLink) return run(() => resolveMapsLink(apiKey, trimmed));
-    if (suggestions[0]) return run(() => placeDetails(apiKey, suggestions[0].placeId));
+    if (visibleSuggestions[0]) return run(() => placeDetails(apiKey, visibleSuggestions[0].placeId));
     onError('Pick a suggestion, paste a Google Maps link, or enter coordinates.');
   };
 
@@ -108,9 +108,9 @@ export function LocationInput({ apiKey, near, onAdd, onError }: Props) {
       {isLink && <Text style={styles.hint}>Google Maps link detected — tap Add.</Text>}
       {coords && <Text style={styles.hint}>Coordinates detected — tap Add.</Text>}
 
-      {suggestions.length > 0 && (
+      {visibleSuggestions.length > 0 && (
         <View style={styles.suggestions}>
-          {suggestions.map((s) => (
+          {visibleSuggestions.map((s) => (
             <Pressable
               key={s.placeId}
               style={({ pressed }) => [styles.suggestion, pressed && styles.pressedRow]}

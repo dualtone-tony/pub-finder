@@ -4,3 +4,7 @@ Icon source. `art.js` holds the SVG artwork; regenerate every PNG in `assets/` w
 
 (needs Playwright + Chromium). `preview.png` shows the iOS, Android adaptive,
 Android monochrome and favicon variants.
+
+Map markers (`assets/markers/`, plus the generated `src/markerAssets.ts`):
+
+    node assets/source/markers.js

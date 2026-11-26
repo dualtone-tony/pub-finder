@@ -1,7 +1,7 @@
 import { useImage } from 'expo-image';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
-import { useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import { useEffect, useMemo, useRef } from 'react';
+import { Linking, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { bounds, boundsCenter, fitZoom } from '../mapGeometry';
 import { originMarkers, venueMarkers } from '../markerAssets';
 import { colors, originColors, originLetter } from '../theme';
@@ -19,7 +19,12 @@ function useImages(sources: number[]) {
  * Native map: Google Maps on Android, Apple Maps on iOS.
  * Shows the search circle, every starting location (lettered) and every venue (numbered as in the list).
  */
-export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProps) {
+// Apple Maps in expo-maps needs iOS 17+ (and pin taps need iOS 18+).
+const IOS_MAJOR = Platform.OS === 'ios' ? parseInt(String(Platform.Version), 10) : 0;
+
+export function ResultsMap({ search, selectedId, onSelect, bottomInset = 0 }: ResultsMapProps) {
+  const appleRef = useRef<AppleMaps.MapView>(null);
+  const googleRef = useRef<GoogleMaps.MapView>(null);
   const { width, height } = useWindowDimensions();
   const originIcons = useImages(originMarkers);
   const venueIcons = useImages(venueMarkers);
@@ -31,6 +36,14 @@ export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.center.latitude, search.center.longitude, search.radius, search.origins.length]);
 
+  // When the detail card is closed, clear the native selection too, so tapping
+  // the same pin again reopens it.
+  useEffect(() => {
+    if (selectedId !== null) return;
+    Promise.resolve(appleRef.current?.selectMarker()).catch(() => {});
+    Promise.resolve(googleRef.current?.selectMarker()).catch(() => {});
+  }, [selectedId]);
+
   const circle = {
     id: 'area',
     center: search.center,
@@ -39,6 +52,23 @@ export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProp
     lineColor: colors.accent,
     lineWidth: 2,
   };
+
+  if (Platform.OS === 'ios' && IOS_MAJOR < 17) {
+    return (
+      <View style={[StyleSheet.absoluteFill, styles.unsupported]}>
+        <Text style={styles.unsupportedText}>The map needs iOS 17 or later.</Text>
+        <Pressable
+          onPress={() =>
+            Linking.openURL(
+              `https://www.google.com/maps/search/pubs+and+bars/@${search.center.latitude},${search.center.longitude},12z`,
+            )
+          }
+        >
+          <Text style={styles.unsupportedLink}>Open the area in Google Maps ↗</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (Platform.OS === 'ios') {
     const annotations: AppleMaps.Annotation[] = [
@@ -61,6 +91,7 @@ export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProp
     ];
     return (
       <AppleMaps.View
+        ref={appleRef}
         style={StyleSheet.absoluteFill}
         cameraPosition={camera}
         circles={[circle]}
@@ -94,6 +125,7 @@ export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProp
   ];
   return (
     <GoogleMaps.View
+      ref={googleRef}
       style={StyleSheet.absoluteFill}
       cameraPosition={camera}
       circles={[circle]}
@@ -105,3 +137,9 @@ export function ResultsMap({ search, onSelect, bottomInset = 0 }: ResultsMapProp
     />
   );
 }
+
+const styles = StyleSheet.create({
+  unsupported: { alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.bg },
+  unsupportedText: { fontSize: 16, color: colors.text },
+  unsupportedLink: { fontSize: 16, fontWeight: '700', color: colors.accent },
+});

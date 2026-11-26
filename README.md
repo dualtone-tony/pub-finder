@@ -75,6 +75,49 @@ on your phone (allow "install unknown apps" when prompted). `.env` is
 gitignored and is not uploaded to EAS, which is why the key goes in an EAS
 environment variable instead.
 
+## Building for iPhone
+
+You need an **Apple Developer Program** membership ($99/year) to install on a
+real iPhone. EAS creates and manages the certificates and provisioning
+profiles for you — just log in with your Apple ID when it asks.
+
+The `production` profile reads the `production` EAS environment, so add the key
+there too:
+
+```bash
+npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_GOOGLE_MAPS_API_KEY \
+    --value "AIza..." --visibility sensitive
+```
+
+**Option A — TestFlight (recommended).** Install via Apple's TestFlight app;
+easy to share with friends (up to 100 internal testers, no device registration).
+
+```bash
+npx eas-cli@latest build --platform ios --profile production --auto-submit
+```
+
+The first run asks to create the app in App Store Connect. When Apple has
+processed the build (~10–30 min after upload), add yourself as a tester in
+App Store Connect → TestFlight, then install from the TestFlight app.
+
+**Option B — direct install (ad hoc).** No TestFlight, but every iPhone must be
+registered first:
+
+```bash
+npx eas-cli@latest device:create          # open the link on each iPhone
+npx eas-cli@latest build --platform ios --profile preview
+```
+
+Open the build link on the iPhone to install. iOS 16+ also needs
+Settings → Privacy & Security → **Developer Mode** turned on.
+
+**Option C — iOS Simulator** (Mac only, no Apple account needed):
+`npx eas-cli@latest build --platform ios --profile ios-simulator`.
+
+iOS notes: the map uses Apple Maps (no extra Google API needed); it needs
+iOS 17+, and tapping pins on the map needs iOS 18+. Bundle ID is
+`com.dualtone.meetinthemiddle`.
+
 ## Code layout
 
 - `src/app/` — screens (Expo Router): `index.tsx` search + results, `map.tsx` map view

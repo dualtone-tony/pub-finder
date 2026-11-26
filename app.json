@@ -8,8 +8,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.example.pubfinder"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dualtone.meetinthemiddle",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.example.pubfinder",

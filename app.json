@@ -31,7 +31,10 @@
         {
           "locationWhenInUsePermission": "Your location is used as one of the starting points when finding a pub in the middle."
         }
-      ]
+      ],
+      "expo-maps",
+      "expo-router",
+      "expo-image"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

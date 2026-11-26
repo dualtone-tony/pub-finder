@@ -18,14 +18,19 @@ locations and it finds **pubs and bars in the area between them**, showing the
 - Sort by **Fairest** (shortest longest-drive), least total driving, rating, or
   nearest the midpoint. Filter to open now.
 - Tap a venue to open it in Google Maps; tap a drive time for turn-by-turn directions.
+- **Map view** (🗺 Map button on the results): the search circle, every location
+  (lettered A, B, C…) and every venue (numbered as in the list). Tap a pin for its
+  drive times and an "Open in Google Maps" button. Google Maps on Android, Apple
+  Maps on iOS. The map uses native code, so it needs a real build (APK / dev
+  build), not Expo Go.
 
 ## Google API key
 
 The app calls Google Maps Platform directly. In Google Cloud Console:
 
 1. Create a project with billing enabled.
-2. Enable **Places API (New)** and **Routes API**.
-3. Create an API key. Restrict it to those two APIs.
+2. Enable **Places API (New)**, **Routes API** and **Maps SDK for Android**.
+3. Create an API key. Restrict it to those three APIs.
 
 Then either paste the key in the app (⚙︎ settings — stored only on the device),
 or put it in `.env` before building:
@@ -33,6 +38,10 @@ or put it in `.env` before building:
 ```
 EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...
 ```
+
+The Android map reads its key from the build (`app.config.ts` copies
+`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` into the Android manifest), so the map needs
+the key set at build time — the in-app setting only covers search and drive times.
 
 Note: anything in an `EXPO_PUBLIC_` variable is bundled into the app, so only
 do that for a key restricted to these APIs.
@@ -68,7 +77,9 @@ environment variable instead.
 
 ## Code layout
 
-- `App.tsx` — main screen
+- `src/app/` — screens (Expo Router): `index.tsx` search + results, `map.tsx` map view
+- `src/components/ResultsMap.tsx` — native map (`expo-maps`); `ResultsMap.web.tsx` is a schematic fallback for web
+- `src/searchContext.tsx` — shares the current results with the map screen
 - `src/components/LocationInput.tsx` — address / link / coordinates / GPS input
 - `src/components/ResultCard.tsx` — venue with per-location drive times
 - `src/google.ts` — Places API (New) + Routes API client

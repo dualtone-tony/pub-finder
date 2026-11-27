@@ -229,9 +229,9 @@ export default function Home() {
           <Text style={styles.section}>Search area around the midpoint</Text>
           <Chips
             options={[
-              ['tight', 'Tight'],
               ['normal', 'Normal'],
               ['wide', 'Wide'],
+              ['xwide', 'Extra wide'],
             ]}
             value={area}
             onChange={setArea}

@@ -13,7 +13,7 @@ locations and it finds **pubs and bars in the area between them**, showing the
   - "Use my current location"
 - Rename locations (e.g. "Tony", "Sam") — they're saved between launches.
 - Searches a circle around the geographic midpoint, sized to how spread out the
-  locations are (Tight / Normal / Wide). Pubs & bars, pubs only, or bars only.
+  locations are (Normal / Wide / Extra wide). Pubs & bars, pubs only, or bars only.
 - Up to 20 venues, each with live-traffic driving time and distance from each location.
 - Sort by **Fairest** (shortest longest-drive), least total driving, rating, or
   nearest the midpoint. Filter to open now, and to places that show sport

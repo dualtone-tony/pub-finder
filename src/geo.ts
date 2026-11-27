@@ -30,8 +30,8 @@ export function centroid(points: LatLng[]): LatLng {
   };
 }
 
-const AREA_FACTOR: Record<AreaSize, number> = { tight: 0.2, normal: 0.35, wide: 0.6 };
-const SINGLE_RADIUS: Record<AreaSize, number> = { tight: 1000, normal: 2500, wide: 6000 };
+const AREA_FACTOR: Record<AreaSize, number> = { normal: 0.6, wide: 0.9, xwide: 1.3 };
+const SINGLE_RADIUS: Record<AreaSize, number> = { normal: 6000, wide: 10000, xwide: 16000 };
 
 /**
  * The circle to search for venues: centred on the midpoint of all the

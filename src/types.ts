@@ -33,5 +33,5 @@ export type VenueResult = Venue & {
 };
 
 export type VenueFilter = 'both' | 'pub' | 'bar';
-export type AreaSize = 'tight' | 'normal' | 'wide';
+export type AreaSize = 'normal' | 'wide' | 'xwide';
 export type SortMode = 'fairest' | 'total' | 'rating' | 'centre';
